@@ -123,13 +123,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Sign Out error:', error.message);
-    } else {
+    try {
+      // Use local scope to clear session reliably without failing on network/token mismatch
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (err) {
+      console.warn('Supabase signOut warning:', err);
+    } finally {
+      // Always reset application state
       setUser(null);
       setProfile(null);
       setSession(null);
+
+      // Clean up any lingering Supabase auth keys from localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          Object.keys(localStorage).forEach((key) => {
+            if (key.startsWith('sb-') || key.includes('auth-token') || key.includes('supabase')) {
+              localStorage.removeItem(key);
+            }
+          });
+        } catch {
+          // ignore
+        }
+      }
     }
   };
 
