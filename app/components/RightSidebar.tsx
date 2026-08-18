@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, ArrowRight, BookOpen, Code, GraduationCap } from 'lucide-react';
+import { Search, ArrowRight, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 interface DbProfile {
@@ -12,13 +12,23 @@ interface DbProfile {
   avatar_url: string | null;
 }
 
+interface DbCommunity {
+  id: string;
+  name: string;
+  handle: string;
+  members_count: number;
+}
+
 export default function RightSidebar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dbUsers, setDbUsers] = useState<DbProfile[]>([]);
+  const [dbCommunities, setDbCommunities] = useState<DbCommunity[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingCommunities, setLoadingCommunities] = useState(true);
 
   useEffect(() => {
     fetchUsers();
+    fetchCommunities();
   }, []);
 
   const fetchUsers = async () => {
@@ -47,26 +57,31 @@ export default function RightSidebar() {
     }
   };
 
-  const communities = [
-    {
-      id: '1',
-      name: 'Higher Studies Club for UPSC / MPSC -...',
-      iconBg: '#eff6ff',
-      icon: <GraduationCap size={17} className="text-blue-600" />,
-    },
-    {
-      id: '2',
-      name: 'Google Developer Groups PCCoE',
-      iconBg: '#ecfdf5',
-      icon: <Code size={17} className="text-emerald-600" />,
-    },
-    {
-      id: '3',
-      name: 'Higher Studies Club for CAT / GMAT -...',
-      iconBg: '#fef3c7',
-      icon: <BookOpen size={17} className="text-amber-600" />,
-    },
-  ];
+  const fetchCommunities = async () => {
+    setLoadingCommunities(true);
+    try {
+      const supabase = createClient();
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      if (!url || url.includes('your-supabase-project-id')) {
+        setLoadingCommunities(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('communities')
+        .select('id, name, handle, members_count')
+        .order('members_count', { ascending: false })
+        .limit(5);
+
+      if (data && !error) {
+        setDbCommunities(data);
+      }
+    } catch (err) {
+      console.warn('Error fetching communities for sidebar:', err);
+    } finally {
+      setLoadingCommunities(false);
+    }
+  };
 
   const friends = [
     {
@@ -165,7 +180,7 @@ export default function RightSidebar() {
         </kbd>
       </div>
 
-      {/* Section 1: C/COMMUNITIES */}
+      {/* Section 1: C/COMMUNITIES — live from Supabase */}
       <div>
         <div
           style={{
@@ -179,55 +194,80 @@ export default function RightSidebar() {
           <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', letterSpacing: '0.5px' }}>
             C/COMMUNITIES
           </span>
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+          <button
+            onClick={fetchCommunities}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+          >
             <ArrowRight size={14} />
           </button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {communities.map((comm) => (
-            <div
-              key={comm.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '6px 8px',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                transition: 'background-color 0.15s',
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0,0,0,0.03)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'; }}
-            >
-              <div
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  backgroundColor: comm.iconBg,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                {comm.icon}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {loadingCommunities ? (
+            [1, 2, 3].map((i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '4px 6px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#e2e8f0', flexShrink: 0, animation: 'pulse 1.5s infinite' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ height: '12px', width: '80%', backgroundColor: '#e2e8f0', borderRadius: '4px' }} />
+                </div>
               </div>
-              <span
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: '#0f172a',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {comm.name}
-              </span>
-            </div>
-          ))}
+            ))
+          ) : dbCommunities.length > 0 ? (
+            dbCommunities.map((comm, idx) => {
+              const colors = ['#eff6ff', '#ecfdf5', '#fef3c7', '#fdf2f8', '#f0fdfa'];
+              const textColors = ['#2563eb', '#059669', '#d97706', '#9333ea', '#0d9488'];
+              return (
+                <div
+                  key={comm.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '6px 8px',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0,0,0,0.03)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'; }}
+                >
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      backgroundColor: colors[idx % colors.length],
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      color: textColors[idx % textColors.length],
+                    }}
+                  >
+                    {comm.name.charAt(0)}
+                  </div>
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#0f172a',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {comm.name.length > 28 ? comm.name.slice(0, 28) + '...' : comm.name}
+                  </span>
+                </div>
+              );
+            })
+          ) : (
+            <p style={{ fontSize: '12.5px', color: '#94a3b8', padding: '4px 6px' }}>
+              No communities yet
+            </p>
+          )}
         </div>
       </div>
 

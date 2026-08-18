@@ -8,6 +8,7 @@ import PostFeed, { Post } from './components/PostFeed';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import CommunitiesSection from './components/CommunitiesSection';
+import CommunitiesPage from './components/CommunitiesPage';
 import FeaturesSection from './components/FeaturesSection';
 import AboutSection from './components/AboutSection';
 import { MessageSquare, Users, Gamepad2, ArrowRight } from 'lucide-react';
@@ -296,15 +297,7 @@ export default function Home() {
             )}
 
             {activeTab === 'communities' && (
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-8 text-center space-y-4 shadow-sm">
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <Users size={28} />
-                </div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Communities</h2>
-                <p className="text-sm text-slate-500 max-w-md mx-auto">
-                  Explore student clubs, tech chapters (ACM, GDGC, OWASP) and branch forums at PCCOE.
-                </p>
-              </div>
+              <CommunitiesPage />
             )}
 
             {activeTab === 'arcade' && (
