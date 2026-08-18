@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Paperclip, Send, Image as ImageIcon } from 'lucide-react';
+import { Image as ImageIcon, Send } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 interface PostComposerProps {
@@ -44,21 +44,6 @@ export default function PostComposer({ onPostCreated }: PostComposerProps) {
         linkTitle = linkUrl;
       }
     }
-
-    const newPostData = {
-      id: typeof crypto !== 'undefined' ? crypto.randomUUID() : Math.random().toString(),
-      author_id: user.id,
-      author_name: authorName,
-      author_handle: authorHandle,
-      author_avatar: authorAvatar,
-      content: content.trim(),
-      link_url: linkUrl || null,
-      link_title: linkTitle || null,
-      link_domain: linkDomain || null,
-      likes_count: 0,
-      replies_count: 0,
-      created_at: 'Just now',
-    };
 
     try {
       const { createClient } = await import('@/lib/supabase/client');
@@ -112,70 +97,146 @@ export default function PostComposer({ onPostCreated }: PostComposerProps) {
   };
 
   return (
-    <div style={{
-      backgroundColor: '#ffffff',
-      border: '1px solid rgba(0,0,0,0.09)',
-      borderRadius: '14px',
-      padding: '16px 20px',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-    }}>
+    <div
+      style={{
+        backgroundColor: '#ffffff',
+        border: '1px solid rgba(0,0,0,0.06)',
+        borderRadius: '20px',
+        padding: '18px 24px',
+        boxShadow: '0 2px 14px rgba(0,0,0,0.02)',
+      }}
+    >
       <form onSubmit={handleSubmit}>
-        <div className="flex gap-3.5">
+        <div style={{ display: 'flex', gap: '14px' }}>
           {/* User Avatar */}
-          <div className="flex-shrink-0">
+          <div style={{ flexShrink: 0 }}>
             {profile?.avatar_url ? (
               <img
                 src={profile.avatar_url}
-                alt={profile.full_name}
-                className="w-11 h-11 rounded-full object-cover border border-slate-200 dark:border-slate-700"
+                alt={profile.full_name || 'User'}
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '1px solid #e2e8f0',
+                }}
               />
             ) : (
-              <div className="w-11 h-11 rounded-full bg-[#52443d] text-white font-semibold flex items-center justify-center text-lg shadow-inner">
+              <div
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '50%',
+                  backgroundColor: '#4a403b',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px',
+                }}
+              >
                 {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'M'}
               </div>
             )}
           </div>
 
-          {/* Text Area Input */}
-          <div className="flex-1 min-w-0">
+          {/* Input Area */}
+          <div style={{ flex: 1, minWidth: 0 }}>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="What's on your mind? Type @ to tag users or communities"
               rows={3}
-              className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm resize-none pt-1"
+              style={{
+                width: '100%',
+                backgroundColor: 'transparent',
+                border: 'none',
+                outline: 'none',
+                resize: 'none',
+                fontSize: '14px',
+                color: '#334155',
+                lineHeight: '1.6',
+                fontFamily: 'inherit',
+                paddingTop: '6px',
+              }}
             />
 
             {showLinkInput && (
-              <div className="mt-2 mb-3">
+              <div style={{ marginTop: '8px', marginBottom: '12px' }}>
                 <input
                   type="url"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   placeholder="Paste link URL (e.g. Google Drive link)..."
-                  className="w-full text-xs px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                  style={{
+                    width: '100%',
+                    fontSize: '12px',
+                    padding: '8px 12px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '10px',
+                    color: '#1e293b',
+                    outline: 'none',
+                  }}
                 />
               </div>
             )}
 
-            {/* Bottom Actions Bar */}
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800/80">
-              <div className="flex items-center gap-2">
+            {/* Bottom Actions Row */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingTop: '14px',
+                borderTop: '1px solid rgba(0,0,0,0.05)',
+                marginTop: '6px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button
                   type="button"
                   onClick={() => setShowLinkInput(!showLinkInput)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: '#556477',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(0,0,0,0.04)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
                 >
-                  <ImageIcon size={16} className="text-slate-400" />
+                  <ImageIcon size={16} strokeWidth={1.8} style={{ color: '#64748b' }} />
                   <span>Attach</span>
                 </button>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: '#64748b',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'color 0.15s',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#1e293b'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#64748b'; }}
                 >
                   Cancel
                 </button>
@@ -183,13 +244,23 @@ export default function PostComposer({ onPostCreated }: PostComposerProps) {
                 <button
                   type="submit"
                   disabled={!content.trim() || isSubmitting}
-                  className={`flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-[#93c5fd] hover:bg-[#3b82f6] rounded-full transition-all shadow-sm ${
-                    !content.trim() || isSubmitting
-                      ? 'opacity-60 cursor-not-allowed bg-blue-300'
-                      : 'bg-blue-500 hover:bg-blue-600 active:scale-95 text-white'
-                  }`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 22px',
+                    fontSize: '13.5px',
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    backgroundColor: !content.trim() || isSubmitting ? '#b8e3ef' : '#84CEE4',
+                    border: 'none',
+                    borderRadius: '9999px',
+                    cursor: !content.trim() || isSubmitting ? 'not-allowed' : 'pointer',
+                    boxShadow: !content.trim() || isSubmitting ? 'none' : '0 2px 10px rgba(132, 206, 228, 0.35)',
+                    transition: 'all 0.15s',
+                  }}
                 >
-                  <Send size={13} />
+                  <Send size={13} strokeWidth={2.4} />
                   <span>{isSubmitting ? 'Posting...' : 'Post'}</span>
                 </button>
               </div>

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Heart, MessageSquare, ExternalLink, Send, Share2, MoreHorizontal } from 'lucide-react';
+import React, { useState } from 'react';
+import { Heart, MessageSquare, ExternalLink, Send } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export interface Post {
@@ -30,17 +30,41 @@ export interface Reply {
   created_at: string;
 }
 
-
 interface PostFeedProps {
   posts: Post[];
   setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
 }
 
+function formatPostDate(dateStr?: string): string {
+  if (!dateStr) return '';
+  if (dateStr === 'Just now' || dateStr.includes('May') || dateStr.includes('ago')) {
+    return dateStr;
+  }
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+  } catch {
+    return dateStr;
+  }
+}
+
 export default function PostFeed({ posts, setPosts }: PostFeedProps) {
-  const { user, profile, signInWithGoogle } = useAuth();
+  const { user, profile } = useAuth();
   const [activeReplyPostId, setActiveReplyPostId] = useState<string | null>(null);
   const [replyInput, setReplyInput] = useState<{ [postId: string]: string }>({});
-
 
   const toggleLike = async (postId: string) => {
     setPosts((prevPosts) =>
@@ -127,16 +151,16 @@ export default function PostFeed({ posts, setPosts }: PostFeedProps) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {posts.map((post) => (
         <article
           key={post.id}
           style={{
             backgroundColor: '#ffffff',
-            border: '1px solid rgba(0,0,0,0.09)',
-            borderRadius: '14px',
-            padding: '16px 20px',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+            border: '1px solid rgba(0,0,0,0.06)',
+            borderRadius: '20px',
+            padding: '22px 24px',
+            boxShadow: '0 2px 14px rgba(0,0,0,0.02)',
           }}
         >
           {/* Post Header */}
@@ -146,21 +170,44 @@ export default function PostFeed({ posts, setPosts }: PostFeedProps) {
                 <img
                   src={post.author_avatar}
                   alt={post.author_name}
-                  style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1px solid #e2e8f0',
+                  }}
                 />
               ) : (
-                <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: '#2563EB', color: '#fff', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
-                  {post.author_name.charAt(0)}
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '50%',
+                    backgroundColor: '#4a403b',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '15px',
+                  }}
+                >
+                  {post.author_name.charAt(0).toUpperCase()}
                 </div>
               )}
 
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <h3 style={{ fontWeight: 600, fontSize: '13.5px', color: '#1e293b', margin: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
+                  <h3 style={{ fontWeight: 700, fontSize: '14.5px', color: '#0f172a', margin: 0 }}>
                     {post.author_name}
                   </h3>
-                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>@{post.author_handle}</span>
-                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>· {post.created_at}</span>
+                  <span style={{ fontSize: '12.5px', color: '#94a3b8', marginLeft: '2px' }}>
+                    @{post.author_handle}
+                  </span>
+                  <span style={{ fontSize: '12.5px', color: '#94a3b8' }}>
+                    · {formatPostDate(post.created_at)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -169,51 +216,103 @@ export default function PostFeed({ posts, setPosts }: PostFeedProps) {
             <button
               onClick={() => toggleLike(post.id)}
               style={{
-                display: 'flex', alignItems: 'center', gap: '5px',
-                padding: '5px 10px', borderRadius: '9999px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '5px 12px',
+                borderRadius: '9999px',
                 border: `1px solid ${post.user_has_liked ? '#fecaca' : '#e2e8f0'}`,
-                backgroundColor: post.user_has_liked ? '#fff1f2' : '#f8fafc',
+                backgroundColor: post.user_has_liked ? '#fff1f2' : '#ffffff',
                 color: post.user_has_liked ? '#e11d48' : '#64748b',
-                fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+                fontSize: '12.5px',
+                fontWeight: 600,
+                cursor: 'pointer',
                 transition: 'all 0.15s',
               }}
             >
               <Heart
-                size={13}
-                style={{ fill: post.user_has_liked ? '#e11d48' : 'none', color: post.user_has_liked ? '#e11d48' : '#94a3b8' }}
+                size={14}
+                style={{
+                  fill: post.user_has_liked ? '#e11d48' : 'none',
+                  color: post.user_has_liked ? '#e11d48' : '#94a3b8',
+                }}
               />
               <span>{post.likes_count}</span>
             </button>
           </div>
 
           {/* Post Content */}
-          <div style={{ marginTop: '10px', fontSize: '13.5px', color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+          <div
+            style={{
+              marginTop: '12px',
+              fontSize: '14px',
+              color: '#334155',
+              lineHeight: '1.65',
+              whiteSpace: 'pre-line',
+            }}
+          >
             {post.content}
           </div>
 
           {/* Link Embed Preview Card */}
           {post.link_url && (
-            <div style={{ marginTop: '10px' }}>
+            <div style={{ marginTop: '14px' }}>
               <a
                 href={post.link_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
-                  backgroundColor: '#eff6ff', border: '1px solid #dbeafe',
-                  borderRadius: '10px', textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 14px',
+                  backgroundColor: '#f0f7ff',
+                  border: '1px solid #dbeafe',
+                  borderRadius: '12px',
+                  textDecoration: 'none',
                   transition: 'background-color 0.15s',
                 }}
               >
-                <div style={{ width: 36, height: 36, borderRadius: '8px', backgroundColor: '#dbeafe', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <ExternalLink size={18} />
+                <div
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '10px',
+                    backgroundColor: '#dbeafe',
+                    color: '#2563EB',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <ExternalLink size={19} />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-blue-700 dark:text-blue-400 truncate">
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: '#1d4ed8',
+                      margin: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
                     {post.link_title || post.link_url}
                   </p>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                    {post.link_domain || 'external link'}
+                  <p
+                    style={{
+                      fontSize: '11.5px',
+                      color: '#94a3b8',
+                      margin: '2px 0 0',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {post.link_domain || 'drive.google.com'}
                   </p>
                 </div>
               </a>
@@ -221,12 +320,25 @@ export default function PostFeed({ posts, setPosts }: PostFeedProps) {
           )}
 
           {/* Post Footer Actions */}
-          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <button
               onClick={() =>
                 setActiveReplyPostId(activeReplyPostId === post.id ? null : post.id)
               }
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 rounded-xl transition-colors"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: '#2563EB',
+                backgroundColor: '#f0f6ff',
+                border: '1px solid #dbeafe',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
             >
               <MessageSquare size={14} />
               <span>
@@ -234,76 +346,133 @@ export default function PostFeed({ posts, setPosts }: PostFeedProps) {
                 {(post.replies?.length || post.replies_count || 0) === 1 ? 'Reply' : 'Replies'}
               </span>
             </button>
-
-            <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg">
-              <Share2 size={15} />
-            </button>
           </div>
 
           {/* Nested Replies Section */}
-          <div className="mt-3 space-y-3">
+          <div style={{ marginTop: '12px' }}>
             {post.replies && post.replies.length > 0 && (
-              <div className="pl-4 border-l-2 border-slate-200 dark:border-slate-800 space-y-2.5 mt-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
                 {post.replies.map((reply) => (
                   <div
                     key={reply.id}
-                    className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl flex items-start gap-2.5"
+                    style={{
+                      backgroundColor: '#f8fafc',
+                      padding: '12px 14px',
+                      borderRadius: '14px',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '10px',
+                    }}
                   >
                     {reply.author_avatar ? (
                       <img
                         src={reply.author_avatar}
                         alt={reply.author_name}
-                        className="w-7 h-7 rounded-full object-cover"
+                        style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
                       />
                     ) : (
-                      <div className="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+                      <div
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          backgroundColor: '#16a34a',
+                          color: '#ffffff',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '13px',
+                          flexShrink: 0,
+                        }}
+                      >
                         {reply.author_name.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-xs text-slate-900 dark:text-white">
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontWeight: 700, fontSize: '13px', color: '#0f172a' }}>
                           {reply.author_name}
                         </span>
-                        <span className="text-[11px] text-slate-400">@{reply.author_handle}</span>
-                        <span className="text-[11px] text-slate-400">· {reply.created_at}</span>
+                        <span style={{ fontSize: '11.5px', color: '#94a3b8' }}>
+                          @{reply.author_handle}
+                        </span>
                       </div>
-                      <p className="text-xs text-slate-700 dark:text-slate-300 mt-1">
+                      <p style={{ fontSize: '13px', color: '#334155', margin: '4px 0 2px' }}>
                         {reply.content}
                       </p>
+                      <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        {formatPostDate(reply.created_at)}
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Reply Input Drawer */}
-            {activeReplyPostId === post.id && (
-              <div className="flex items-center gap-2 mt-3 pt-2">
-                <div className="w-7 h-7 rounded-full bg-slate-700 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
-                  {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'M'}
-                </div>
-                <input
-                  type="text"
-                  value={replyInput[post.id] || ''}
-                  onChange={(e) =>
-                    setReplyInput({ ...replyInput, [post.id]: e.target.value })
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAddReply(post.id);
-                  }}
-                  placeholder="Write a reply... Type @ to tag someone"
-                  className="flex-1 text-xs px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                />
-                <button
-                  onClick={() => handleAddReply(post.id)}
-                  disabled={!replyInput[post.id]?.trim()}
-                  className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl disabled:opacity-50 transition-colors"
-                >
-                  <Send size={13} />
-                </button>
+            {/* Reply Input Box */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: '#4a403b',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '13px',
+                  flexShrink: 0,
+                }}
+              >
+                {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'M'}
               </div>
-            )}
+
+              <input
+                type="text"
+                value={replyInput[post.id] || ''}
+                onChange={(e) =>
+                  setReplyInput({ ...replyInput, [post.id]: e.target.value })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddReply(post.id);
+                }}
+                placeholder="Write a reply... Type @ to tag someone"
+                style={{
+                  flex: 1,
+                  fontSize: '13px',
+                  padding: '8px 14px',
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '9999px',
+                  color: '#1e293b',
+                  outline: 'none',
+                }}
+              />
+
+              <button
+                onClick={() => handleAddReply(post.id)}
+                disabled={!replyInput[post.id]?.trim()}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: replyInput[post.id]?.trim() ? '#84CEE4' : '#e2e8f0',
+                  color: '#ffffff',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: replyInput[post.id]?.trim() ? 'pointer' : 'default',
+                  transition: 'background-color 0.15s',
+                  flexShrink: 0,
+                }}
+              >
+                <Send size={13} strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
         </article>
       ))}
