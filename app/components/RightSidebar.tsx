@@ -114,9 +114,11 @@ export default function RightSidebar() {
 
   return (
     <aside
-      className="hidden xl:flex flex-col gap-6 py-4 px-4 sticky top-0 h-screen overflow-y-auto scrollbar-none"
+      className="hidden xl:flex flex-col gap-6 py-6 px-10 sticky top-0 h-screen overflow-y-auto scrollbar-none"
       style={{
-        width: '300px',
+        width: '310px',
+        backgroundColor: '#ffffff',
+        borderLeft: '1px solid rgba(0,0,0,0.06)',
         scrollbarWidth: 'none',
       }}
     >

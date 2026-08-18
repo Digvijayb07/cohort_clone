@@ -143,7 +143,7 @@ export default function Home() {
               zIndex: 30,
               backgroundColor: 'rgba(247, 248, 250, 0.85)',
               backdropFilter: 'blur(12px)',
-              padding: '14px 28px',
+              padding: '16px 48px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -203,13 +203,13 @@ export default function Home() {
           <main
             style={{
               flex: 1,
-              maxWidth: '680px',
+              maxWidth: '740px',
               width: '100%',
               margin: '0 auto',
-              padding: '24px 16px 48px',
+              padding: '32px 36px 64px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '16px',
+              gap: '20px',
             }}
           >
             {activeTab === 'home' && (
