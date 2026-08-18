@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Pencil, BarChart2, MessageSquare, Mail, LogOut, Camera, Loader2, X, Save } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@/lib/supabase/client';
+import CircularText from './CircularText';
 
 interface Stats {
   communities: number;
@@ -206,6 +207,10 @@ export default function ProfilePage() {
     { label: 'FLEX', value: stats.flex, illustration: <FlexIllustration /> },
   ];
 
+  const departmentText = profile?.department
+    ? `${profile.department.toUpperCase()} • PCCOE • `
+    : 'COMPUTER ENGINEERING • PCCOE • ';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
 
@@ -226,6 +231,24 @@ export default function ProfilePage() {
           opacity: 0.6,
         }} />
 
+        {/* CircularText React Bits Component: User's Department */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 2,
+            pointerEvents: 'auto',
+          }}
+        >
+          <CircularText
+            text={departmentText}
+            spinDuration={20}
+            onHover="speedUp"
+          />
+        </div>
+
         {/* COHORT USER badge */}
         <div
           style={{
@@ -236,6 +259,7 @@ export default function ProfilePage() {
             padding: '6px 14px 6px 10px',
             boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
             backdropFilter: 'blur(8px)',
+            zIndex: 3,
           }}
         >
           <span style={{ fontSize: '15px' }}>🌐</span>
