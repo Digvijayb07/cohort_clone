@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, ArrowRight, Loader2 } from 'lucide-react';
+import { Search, ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 interface DbProfile {
   id: string;
@@ -20,6 +21,7 @@ interface DbCommunity {
 }
 
 export default function RightSidebar() {
+  const { user: currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [dbUsers, setDbUsers] = useState<DbProfile[]>([]);
   const [dbCommunities, setDbCommunities] = useState<DbCommunity[]>([]);
@@ -29,7 +31,7 @@ export default function RightSidebar() {
   useEffect(() => {
     fetchUsers();
     fetchCommunities();
-  }, []);
+  }, [currentUser]);
 
   const fetchUsers = async () => {
     setLoadingUsers(true);
@@ -41,17 +43,23 @@ export default function RightSidebar() {
         return;
       }
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('profiles')
         .select('id, full_name, username, email, avatar_url')
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (data && !error && data.length > 0) {
+      if (currentUser?.id) {
+        query = query.neq('id', currentUser.id);
+      }
+
+      const { data, error } = await query;
+
+      if (data && !error) {
         setDbUsers(data);
       }
     } catch (err) {
-      console.warn('Error fetching users for C/CONNECT from Supabase:', err);
+      console.warn('Error fetching users from Supabase:', err);
     } finally {
       setLoadingUsers(false);
     }
@@ -83,49 +91,7 @@ export default function RightSidebar() {
     }
   };
 
-  const friends = [
-    {
-      id: '1',
-      name: 'C157_ Shravan Kolhe',
-      handle: 'shravan24',
-      avatarBg: '#7c3aed',
-      avatarText: 'C',
-      highlighted: true,
-    },
-    {
-      id: '2',
-      name: 'FELINA MATHEW',
-      handle: 'felina22',
-      avatarBg: '#059669',
-      avatarText: '😊',
-    },
-    {
-      id: '3',
-      name: 'Arnav Telangi',
-      handle: 'arnav24',
-      avatarBg: '#6366f1',
-      avatarText: '😊',
-    },
-  ];
-
-  // Default fallback if database has no registered users yet
-  const fallbackConnectUsers = [
-    {
-      id: '1',
-      name: 'C157_ Shravan Kolhe',
-      handle: 'shravan24',
-    },
-    {
-      id: '2',
-      name: 'FELINA MATHEW',
-      handle: 'felina22',
-    },
-    {
-      id: '3',
-      name: 'Arnav Telangi',
-      handle: 'arnav24',
-    },
-  ];
+  const avatarColors = ['#7c3aed', '#059669', '#6366f1', '#d97706', '#0d9488', '#e11d48', '#2563eb', '#7c3aed', '#0891b2', '#65a30d'];
 
   return (
     <aside
@@ -271,7 +237,7 @@ export default function RightSidebar() {
         </div>
       </div>
 
-      {/* Section 2: C/FRIENDS */}
+      {/* Section 2: C/FRIENDS — live from Supabase */}
       <div>
         <div
           style={{
@@ -285,78 +251,82 @@ export default function RightSidebar() {
           <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', letterSpacing: '0.5px' }}>
             C/FRIENDS
           </span>
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+          <button onClick={fetchUsers} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
             <ArrowRight size={14} />
           </button>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {friends.map((friend) => (
-            <div
-              key={friend.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '8px 12px',
-                borderRadius: '14px',
-                backgroundColor: friend.highlighted ? '#f1f3f7' : 'transparent',
-                cursor: 'pointer',
-                transition: 'background-color 0.15s',
-              }}
-              onMouseEnter={(e) => {
-                if (!friend.highlighted) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0,0,0,0.03)';
-              }}
-              onMouseLeave={(e) => {
-                if (!friend.highlighted) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent';
-              }}
-            >
-              <div
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  backgroundColor: friend.avatarBg,
-                  color: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  flexShrink: 0,
-                }}
-              >
-                {friend.avatarText}
+          {loadingUsers ? (
+            [1, 2, 3].map((i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#e2e8f0', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ height: '12px', width: '70%', backgroundColor: '#e2e8f0', borderRadius: '4px', marginBottom: '4px' }} />
+                  <div style={{ height: '10px', width: '45%', backgroundColor: '#f1f5f9', borderRadius: '4px' }} />
+                </div>
               </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <p
+            ))
+          ) : dbUsers.length > 0 ? (
+            dbUsers.map((friend, idx) => {
+              const displayName = friend.full_name || friend.email?.split('@')[0] || 'User';
+              const displayHandle = friend.username || friend.email?.split('@')[0] || 'user';
+              const avatarLetter = displayName.charAt(0).toUpperCase();
+              const avatarColor = avatarColors[idx % avatarColors.length];
+              return (
+                <div
+                  key={friend.id}
                   style={{
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    color: '#0f172a',
-                    margin: 0,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px 12px',
+                    borderRadius: '14px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s',
                   }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0,0,0,0.03)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'; }}
                 >
-                  {friend.name}
-                </p>
-                <p
-                  style={{
-                    fontSize: '11.5px',
-                    color: '#64748b',
-                    margin: '1px 0 0',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  @{friend.handle}
-                </p>
-              </div>
-            </div>
-          ))}
+                  {friend.avatar_url ? (
+                    <img
+                      src={friend.avatar_url}
+                      alt={displayName}
+                      style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        backgroundColor: avatarColor,
+                        color: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {avatarLetter}
+                    </div>
+                  )}
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <p style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {displayName}
+                    </p>
+                    <p style={{ fontSize: '11.5px', color: '#64748b', margin: '1px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      @{displayHandle}
+                    </p>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <p style={{ fontSize: '12.5px', color: '#94a3b8', padding: '4px 6px' }}>No users yet</p>
+          )}
         </div>
       </div>
 
@@ -386,100 +356,71 @@ export default function RightSidebar() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {loadingUsers && dbUsers.length === 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {[1, 2, 3].map((i) => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '4px 6px' }}>
-                  <div style={{ height: '12px', width: '60%', backgroundColor: '#e2e8f0', borderRadius: '4px', animation: 'pulse 1.5s infinite' }} />
-                  <div style={{ height: '10px', width: '40%', backgroundColor: '#f1f5f9', borderRadius: '4px' }} />
-                </div>
-              ))}
-            </div>
+          {loadingUsers ? (
+            [1, 2, 3].map((i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '4px 6px' }}>
+                <div style={{ height: '12px', width: '60%', backgroundColor: '#e2e8f0', borderRadius: '4px' }} />
+                <div style={{ height: '10px', width: '40%', backgroundColor: '#f1f5f9', borderRadius: '4px' }} />
+              </div>
+            ))
           ) : dbUsers.length > 0 ? (
-            dbUsers.map((u) => {
+            dbUsers.map((u, idx) => {
               const displayName = u.full_name || u.email?.split('@')[0] || 'User';
               const displayHandle = u.username || u.email?.split('@')[0] || 'user';
-
+              const avatarColor = avatarColors[idx % avatarColors.length];
               return (
                 <div
                   key={u.id}
                   style={{
-                    padding: '6px 8px',
-                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px 12px',
+                    borderRadius: '14px',
                     cursor: 'pointer',
                     transition: 'background-color 0.15s',
                   }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0,0,0,0.03)'; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'; }}
                 >
-                  <p
-                    style={{
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      color: '#0f172a',
-                      margin: 0,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {displayName}
-                  </p>
-                  <p
-                    style={{
-                      fontSize: '11.5px',
-                      color: '#64748b',
-                      margin: '2px 0 0',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    @{displayHandle}
-                  </p>
+                  {u.avatar_url ? (
+                    <img
+                      src={u.avatar_url}
+                      alt={displayName}
+                      style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        backgroundColor: avatarColor,
+                        color: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <p style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {displayName}
+                    </p>
+                    <p style={{ fontSize: '11.5px', color: '#64748b', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      @{displayHandle}
+                    </p>
+                  </div>
                 </div>
               );
             })
           ) : (
-            fallbackConnectUsers.map((fallback) => (
-              <div
-                key={fallback.id}
-                style={{
-                  padding: '6px 8px',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.15s',
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0,0,0,0.03)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'; }}
-              >
-                <p
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    color: '#0f172a',
-                    margin: 0,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {fallback.name}
-                </p>
-                <p
-                  style={{
-                    fontSize: '11.5px',
-                    color: '#64748b',
-                    margin: '2px 0 0',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  @{fallback.handle}
-                </p>
-              </div>
-            ))
+            <p style={{ fontSize: '12.5px', color: '#94a3b8', padding: '4px 6px' }}>No users yet</p>
           )}
         </div>
       </div>
