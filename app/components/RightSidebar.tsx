@@ -1,10 +1,51 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ArrowRight, BookOpen, Code, GraduationCap } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+
+interface DbProfile {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+  email: string | null;
+  avatar_url: string | null;
+}
 
 export default function RightSidebar() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [dbUsers, setDbUsers] = useState<DbProfile[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const supabase = createClient();
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      if (!url || url.includes('your-supabase-project-id')) {
+        setLoadingUsers(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, email, avatar_url')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (data && !error && data.length > 0) {
+        setDbUsers(data);
+      }
+    } catch (err) {
+      console.warn('Error fetching users for C/CONNECT from Supabase:', err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
   const communities = [
     {
@@ -52,7 +93,8 @@ export default function RightSidebar() {
     },
   ];
 
-  const connectUsers = [
+  // Default fallback if database has no registered users yet
+  const fallbackConnectUsers = [
     {
       id: '1',
       name: 'C157_ Shravan Kolhe',
@@ -278,7 +320,7 @@ export default function RightSidebar() {
 
       <div style={{ height: '1px', backgroundColor: 'rgba(0,0,0,0.06)', margin: '4px 0' }} />
 
-      {/* Section 3: C/CONNECT */}
+      {/* Section 3: C/CONNECT (Fetched dynamically from Supabase Database) */}
       <div>
         <div
           style={{
@@ -292,51 +334,111 @@ export default function RightSidebar() {
           <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', letterSpacing: '0.5px' }}>
             C/CONNECT
           </span>
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+          <button
+            onClick={fetchUsers}
+            title="Refresh"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+          >
             <ArrowRight size={14} />
           </button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {connectUsers.map((user) => (
-            <div
-              key={user.id}
-              style={{
-                padding: '4px 6px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                transition: 'background-color 0.15s',
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0,0,0,0.03)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'; }}
-            >
-              <p
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  color: '#0f172a',
-                  margin: 0,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {user.name}
-              </p>
-              <p
-                style={{
-                  fontSize: '11.5px',
-                  color: '#64748b',
-                  margin: '2px 0 0',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                @{user.handle}
-              </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {loadingUsers && dbUsers.length === 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[1, 2, 3].map((i) => (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '4px 6px' }}>
+                  <div style={{ height: '12px', width: '60%', backgroundColor: '#e2e8f0', borderRadius: '4px', animation: 'pulse 1.5s infinite' }} />
+                  <div style={{ height: '10px', width: '40%', backgroundColor: '#f1f5f9', borderRadius: '4px' }} />
+                </div>
+              ))}
             </div>
-          ))}
+          ) : dbUsers.length > 0 ? (
+            dbUsers.map((u) => {
+              const displayName = u.full_name || u.email?.split('@')[0] || 'User';
+              const displayHandle = u.username || u.email?.split('@')[0] || 'user';
+
+              return (
+                <div
+                  key={u.id}
+                  style={{
+                    padding: '6px 8px',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0,0,0,0.03)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'; }}
+                >
+                  <p
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      color: '#0f172a',
+                      margin: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {displayName}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: '11.5px',
+                      color: '#64748b',
+                      margin: '2px 0 0',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    @{displayHandle}
+                  </p>
+                </div>
+              );
+            })
+          ) : (
+            fallbackConnectUsers.map((fallback) => (
+              <div
+                key={fallback.id}
+                style={{
+                  padding: '6px 8px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.15s',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(0,0,0,0.03)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'; }}
+              >
+                <p
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    color: '#0f172a',
+                    margin: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {fallback.name}
+                </p>
+                <p
+                  style={{
+                    fontSize: '11.5px',
+                    color: '#64748b',
+                    margin: '2px 0 0',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  @{fallback.handle}
+                </p>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </aside>
