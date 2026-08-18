@@ -5,12 +5,16 @@ import { User, Session } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   email: string;
   full_name: string;
   avatar_url: string;
   username: string;
+  department?: string | null;
+  whatsapp?: string | null;
+  linkedin?: string | null;
+  bio?: string | null;
 }
 
 interface AuthContextType {
