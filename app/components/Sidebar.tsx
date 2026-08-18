@@ -24,13 +24,23 @@ import { useAuth } from '@/context/AuthContext';
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  isHovered?: boolean;
+  setIsHovered?: (hovered: boolean) => void;
 }
 
-export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
-  const { user, profile, signInWithGoogle, signOut } = useAuth();
+export default function Sidebar({
+  activeTab,
+  setActiveTab,
+  isHovered: controlledHovered,
+  setIsHovered: controlledSetHovered,
+}: SidebarProps) {
+  const { user, profile, signOut } = useAuth();
   const [darkMode, setDarkMode] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [internalHovered, setInternalHovered] = useState(false);
+
+  const isExpanded = controlledHovered !== undefined ? controlledHovered : internalHovered;
+  const setHovered = controlledSetHovered || setInternalHovered;
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('cohort-theme');
@@ -112,16 +122,15 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
 
       {/* Left Collapsible & Expandable Navigation Sidebar */}
       <aside
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col justify-between transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] md:translate-x-0 ${
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className={`fixed top-0 bottom-0 left-0 z-40 flex flex-col justify-between transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{
-          width: isHovered || mobileOpen ? '210px' : '70px',
+          width: isExpanded || mobileOpen ? '210px' : '70px',
           backgroundColor: '#f7f8fa',
           borderRight: '1px solid rgba(0,0,0,0.06)',
-          boxShadow: isHovered ? '4px 0 24px rgba(0,0,0,0.07)' : 'none',
           overflowX: 'hidden',
         }}
       >
@@ -133,8 +142,8 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
-              padding: isHovered ? '0 6px' : '0',
-              justifyContent: isHovered ? 'flex-start' : 'center',
+              padding: isExpanded ? '0 6px' : '0',
+              justifyContent: isExpanded ? 'flex-start' : 'center',
               marginBottom: '24px',
               transition: 'all 0.25s ease',
             }}
@@ -155,7 +164,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                 </defs>
               </svg>
             </div>
-            {isHovered && (
+            {isExpanded && (
               <span
                 style={{
                   fontWeight: 700,
@@ -184,14 +193,14 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                     setActiveTab(item.id);
                     setMobileOpen(false);
                   }}
-                  title={!isHovered ? item.label : undefined}
+                  title={!isExpanded ? item.label : undefined}
                   style={{
                     width: '100%',
                     height: '44px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: isHovered ? 'space-between' : 'center',
-                    padding: isHovered ? '0 14px' : '0',
+                    justifyContent: isExpanded ? 'space-between' : 'center',
+                    padding: isExpanded ? '0 14px' : '0',
                     borderRadius: isActive ? '14px' : '12px',
                     border: 'none',
                     cursor: 'pointer',
@@ -243,7 +252,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                       )}
 
                       {/* Pill badge when collapsed (like HeadsUp 99+) */}
-                      {!isHovered && item.badge && item.badgeType === 'pill' && !isActive && (
+                      {!isExpanded && item.badge && item.badgeType === 'pill' && !isActive && (
                         <span
                           style={{
                             position: 'absolute',
@@ -265,7 +274,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                     </div>
 
                     {/* Label when expanded */}
-                    {isHovered && (
+                    {isExpanded && (
                       <span style={{ whiteSpace: 'nowrap', animation: 'fadeIn 0.2s ease' }}>
                         {item.label}
                       </span>
@@ -273,7 +282,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                   </div>
 
                   {/* Right pill badge when expanded */}
-                  {isHovered && item.badge && item.badgeType === 'pill' && (
+                  {isExpanded && item.badge && item.badgeType === 'pill' && (
                     <span
                       style={{
                         fontSize: '10px',
@@ -297,12 +306,12 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         {/* Bottom Section: Theme Toggle & User Account */}
         <div
           style={{
-            padding: isHovered ? '14px 14px' : '14px 0',
+            padding: isExpanded ? '14px 14px' : '14px 0',
             borderTop: '1px solid rgba(0,0,0,0.06)',
             backgroundColor: 'transparent',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: isHovered ? 'stretch' : 'center',
+            alignItems: isExpanded ? 'stretch' : 'center',
             transition: 'all 0.25s ease',
           }}
         >
@@ -311,12 +320,12 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             onClick={toggleDarkMode}
             title="Dark mode"
             style={{
-              width: isHovered ? '100%' : '44px',
+              width: isExpanded ? '100%' : '44px',
               height: '44px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: isHovered ? 'space-between' : 'center',
-              padding: isHovered ? '0 12px' : '0',
+              justifyContent: isExpanded ? 'space-between' : 'center',
+              padding: isExpanded ? '0 12px' : '0',
               borderRadius: '12px',
               border: 'none',
               cursor: 'pointer',
@@ -331,9 +340,9 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               {darkMode ? <Sun size={19} style={{ color: '#f59e0b' }} /> : <Moon size={19} style={{ color: '#556477' }} />}
-              {isHovered && <span style={{ whiteSpace: 'nowrap' }}>{darkMode ? 'Light mode' : 'Dark mode'}</span>}
+              {isExpanded && <span style={{ whiteSpace: 'nowrap' }}>{darkMode ? 'Light mode' : 'Dark mode'}</span>}
             </div>
-            {isHovered && (
+            {isExpanded && (
               <div
                 style={{
                   width: '34px',
@@ -360,7 +369,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           </button>
 
           {/* User Account Info when expanded */}
-          {user && isHovered && (
+          {user && isExpanded && (
             <div
               style={{
                 display: 'flex',
