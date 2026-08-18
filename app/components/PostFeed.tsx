@@ -30,32 +30,6 @@ export interface Reply {
   created_at: string;
 }
 
-const INITIAL_POSTS: Post[] = [
-  {
-    id: 'post-1',
-    author_name: 'Vrushabh Hirap',
-    author_handle: 'vrushabhhirap',
-    author_avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vrushabh',
-    content: 'TOC solutions are up on Cohort 👀\nhave a look whenever you want... panic studying before the exam is still an option 😅',
-    link_url: 'https://drive.google.com/drive/folders/1vK-5yOlEpuYwEnlvyUx_n_JXfj_EXAMPLE',
-    link_title: 'https://drive.google.com/drive/folders/1vK-5yOlEpuYwEnlvyUx_n_JXfj...',
-    link_domain: 'drive.google.com',
-    likes_count: 5,
-    replies_count: 1,
-    created_at: '6 May',
-    user_has_liked: false,
-    replies: [
-      {
-        id: 'reply-1',
-        author_name: 'SOHAM ZAGARE',
-        author_handle: 'soham24',
-        author_avatar: '',
-        content: 'Cohort goated ngl',
-        created_at: '6 May',
-      },
-    ],
-  },
-];
 
 interface PostFeedProps {
   posts: Post[];
@@ -67,12 +41,6 @@ export default function PostFeed({ posts, setPosts }: PostFeedProps) {
   const [activeReplyPostId, setActiveReplyPostId] = useState<string | null>(null);
   const [replyInput, setReplyInput] = useState<{ [postId: string]: string }>({});
 
-  useEffect(() => {
-    // If posts is empty, seed initial posts
-    if (posts.length === 0) {
-      setPosts(INITIAL_POSTS);
-    }
-  }, [posts.length, setPosts]);
 
   const toggleLike = async (postId: string) => {
     setPosts((prevPosts) =>

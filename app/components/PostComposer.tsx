@@ -78,21 +78,29 @@ export default function PostComposer({ onPostCreated }: PostComposerProps) {
             link_domain: linkDomain || null,
           },
         ])
-        .select()
+        .select(`
+          id, author_id, author_name, author_handle, author_avatar,
+          content, link_url, link_title, link_domain,
+          likes_count, replies_count, created_at,
+          replies (
+            id, author_name, author_handle, author_avatar, content, created_at
+          )
+        `)
         .single();
 
-      if (!error && data) {
+      if (error) {
+        console.error('Supabase post creation error:', error);
+        alert(`Failed to upload post to Supabase: ${error.message}\nMake sure your Supabase schema is executed in SQL Editor!`);
+      } else if (data) {
         if (onPostCreated) onPostCreated(data);
-      } else {
-        if (onPostCreated) onPostCreated(newPostData);
+        setContent('');
+        setLinkUrl('');
+        setShowLinkInput(false);
       }
-    } catch (err) {
-      console.warn('Supabase post insert fallback:', err);
-      if (onPostCreated) onPostCreated(newPostData);
+    } catch (err: any) {
+      console.error('Supabase post insert exception:', err);
+      alert(`Could not connect to Supabase: ${err.message || err}`);
     } finally {
-      setContent('');
-      setLinkUrl('');
-      setShowLinkInput(false);
       setIsSubmitting(false);
     }
   };
