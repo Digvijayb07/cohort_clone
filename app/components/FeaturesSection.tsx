@@ -1,6 +1,14 @@
 'use client';
 
-const features = [
+interface Feature {
+  icon: React.ReactNode;
+  name: string;
+  description: string;
+  highlighted?: boolean;
+  gradientTitle?: boolean;
+}
+
+const features: Feature[] = [
   {
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -22,6 +30,7 @@ const features = [
     ),
     name: 'Communities',
     description: 'Discover and join 30+ student-run clubs and organizations at PCCOE — from OWASP and GDGC to Art Circle and NSS.',
+    gradientTitle: true,
   },
   {
     icon: (
@@ -50,6 +59,7 @@ const features = [
     ),
     name: 'XD (Exchange)',
     description: 'An anonymous exchange board where students share honest thoughts, campus tips, and creative ideas freely.',
+    gradientTitle: true,
   },
   {
     icon: (
@@ -81,46 +91,13 @@ const features = [
     ),
     name: 'Student Profile',
     description: 'Showcase your achievements, certifications, and hackathon wins. Build a professional portfolio visible to peers and faculty.',
+    gradientTitle: true,
   },
 ];
 
 export default function FeaturesSection() {
   return (
     <section className="features-section">
-      {/* Decorative figures */}
-      <div className="features-deco features-deco-left-top">
-        <svg width="60" height="80" viewBox="0 0 60 80" fill="none" opacity="0.2">
-          <ellipse cx="30" cy="40" rx="18" ry="30" stroke="#3B39BC" strokeWidth="1.5"/>
-          <circle cx="30" cy="20" r="8" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="22" y1="45" x2="15" y2="65" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="38" y1="45" x2="45" y2="65" stroke="#3B39BC" strokeWidth="1.5"/>
-        </svg>
-      </div>
-      <div className="features-deco features-deco-right-top">
-        <svg width="55" height="70" viewBox="0 0 55 70" fill="none" opacity="0.2">
-          <ellipse cx="27" cy="35" rx="16" ry="26" stroke="#3B39BC" strokeWidth="1.5"/>
-          <circle cx="27" cy="16" r="7" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="20" y1="39" x2="13" y2="56" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="34" y1="39" x2="41" y2="56" stroke="#3B39BC" strokeWidth="1.5"/>
-        </svg>
-      </div>
-      <div className="features-deco features-deco-left-bottom">
-        <svg width="50" height="65" viewBox="0 0 50 65" fill="none" opacity="0.2">
-          <ellipse cx="25" cy="33" rx="14" ry="23" stroke="#3B39BC" strokeWidth="1.5"/>
-          <circle cx="25" cy="15" r="6" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="19" y1="37" x2="12" y2="53" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="31" y1="37" x2="38" y2="53" stroke="#3B39BC" strokeWidth="1.5"/>
-        </svg>
-      </div>
-      <div className="features-deco features-deco-right-bottom">
-        <svg width="52" height="68" viewBox="0 0 52 68" fill="none" opacity="0.2">
-          <ellipse cx="26" cy="34" rx="15" ry="25" stroke="#3B39BC" strokeWidth="1.5"/>
-          <circle cx="26" cy="16" r="7" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="19" y1="38" x2="12" y2="55" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="33" y1="38" x2="40" y2="55" stroke="#3B39BC" strokeWidth="1.5"/>
-        </svg>
-      </div>
-
       <div className="features-container">
         <div className="features-header">
           <h2 className="features-title">Explore Platform Features</h2>
@@ -133,8 +110,10 @@ export default function FeaturesSection() {
         <div className="features-grid">
           {features.map((feature, i) => (
             <div key={i} className={`feature-card ${feature.highlighted ? 'feature-card-highlighted' : ''}`}>
-              <div className="feature-icon">{feature.icon}</div>
-              <h3 className="feature-name">{feature.name}</h3>
+              <div className="feature-icon-wrap">{feature.icon}</div>
+              <h3 className={`feature-name ${feature.gradientTitle ? 'feature-name--gradient' : ''}`}>
+                {feature.name}
+              </h3>
               <p className="feature-description">{feature.description}</p>
             </div>
           ))}

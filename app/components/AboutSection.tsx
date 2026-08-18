@@ -3,40 +3,6 @@
 export default function AboutSection() {
   return (
     <section className="about-section">
-      {/* Decorative figures */}
-      <div className="about-deco about-deco-left-top">
-        <svg width="60" height="80" viewBox="0 0 60 80" fill="none" opacity="0.18">
-          <ellipse cx="30" cy="40" rx="18" ry="30" stroke="#3B39BC" strokeWidth="1.5"/>
-          <circle cx="30" cy="20" r="8" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="22" y1="45" x2="15" y2="65" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="38" y1="45" x2="45" y2="65" stroke="#3B39BC" strokeWidth="1.5"/>
-        </svg>
-      </div>
-      <div className="about-deco about-deco-right-top">
-        <svg width="55" height="72" viewBox="0 0 55 72" fill="none" opacity="0.18">
-          <ellipse cx="27" cy="36" rx="16" ry="27" stroke="#3B39BC" strokeWidth="1.5"/>
-          <circle cx="27" cy="17" r="7" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="20" y1="40" x2="13" y2="58" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="34" y1="40" x2="41" y2="58" stroke="#3B39BC" strokeWidth="1.5"/>
-        </svg>
-      </div>
-      <div className="about-deco about-deco-left-bottom">
-        <svg width="52" height="68" viewBox="0 0 52 68" fill="none" opacity="0.18">
-          <ellipse cx="26" cy="34" rx="15" ry="25" stroke="#3B39BC" strokeWidth="1.5"/>
-          <circle cx="26" cy="16" r="7" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="19" y1="38" x2="12" y2="55" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="33" y1="38" x2="40" y2="55" stroke="#3B39BC" strokeWidth="1.5"/>
-        </svg>
-      </div>
-      <div className="about-deco about-deco-right-bottom">
-        <svg width="50" height="65" viewBox="0 0 50 65" fill="none" opacity="0.18">
-          <ellipse cx="25" cy="33" rx="14" ry="23" stroke="#3B39BC" strokeWidth="1.5"/>
-          <circle cx="25" cy="15" r="6" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="19" y1="37" x2="12" y2="53" stroke="#3B39BC" strokeWidth="1.5"/>
-          <line x1="31" y1="37" x2="38" y2="53" stroke="#3B39BC" strokeWidth="1.5"/>
-        </svg>
-      </div>
-
       <div className="about-container">
         <h2 className="about-title">About Cohort PCCOE</h2>
 

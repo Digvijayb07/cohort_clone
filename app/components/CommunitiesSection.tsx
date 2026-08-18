@@ -1,5 +1,6 @@
 'use client';
 import Image from 'next/image';
+import CurvedLoop from './CurvedLoop';
 
 const logos = [
   { src: '/logos/acmlogo.jpg', name: 'ACM' },
@@ -10,25 +11,6 @@ const logos = [
   { src: '/logos/gfglog.jpg', name: 'GDGC' },
   { src: '/logos/nsslogo.png', name: 'NSS' },
   { src: '/logos/owasplogo.png', name: 'OWASP' },
-];
-
-const textItems = [
-  'Cohort social',
-  '✦',
-  'Connext',
-  '✦',
-  'Discover',
-  '✦',
-  'Navigate',
-  '✦',
-  'Cohort social',
-  '✦',
-  'Connext',
-  '✦',
-  'Discover',
-  '✦',
-  'Navigate',
-  '✦',
 ];
 
 export default function CommunitiesSection() {
@@ -57,15 +39,16 @@ export default function CommunitiesSection() {
         </div>
       </div>
 
-      {/* Curved Text Marquee */}
-      <div className="text-marquee-wrapper">
-        <div className="text-marquee-track">
-          {[...textItems, ...textItems].map((item, i) => (
-            <span key={i} className={`text-marquee-item ${item === '✦' ? 'marquee-star' : ''}`}>
-              {item}
-            </span>
-          ))}
-        </div>
+      {/* CurvedLoop Text Marquee - deep graceful curve with slower leisurely scroll */}
+      <div className="curved-marquee-wrapper">
+        <CurvedLoop
+          marqueeText="COHORT SOCIAL ✦ CONNECT ✦ DISCOVER ✦ NAVIGATE ✦"
+          speed={0.6}
+          curveAmount={220}
+          direction="left"
+          interactive={true}
+          className="curved-marquee-text"
+        />
       </div>
     </section>
   );
