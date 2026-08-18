@@ -27,9 +27,10 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
-  const { user, profile, signInWithGoogle, signOut, loading } = useAuth();
+  const { user, profile, signInWithGoogle, signOut } = useAuth();
   const [darkMode, setDarkMode] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('cohort-theme');
@@ -109,42 +110,69 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         />
       )}
 
-      {/* Left Navigation Sidebar */}
+      {/* Left Collapsible & Expandable Navigation Sidebar */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col justify-between transition-transform duration-300 ease-in-out md:translate-x-0 ${
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col justify-between transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{
-          width: '210px',
+          width: isHovered || mobileOpen ? '210px' : '70px',
           backgroundColor: '#f7f8fa',
           borderRight: '1px solid rgba(0,0,0,0.06)',
+          boxShadow: isHovered ? '4px 0 24px rgba(0,0,0,0.07)' : 'none',
+          overflowX: 'hidden',
         }}
       >
         {/* Top Logo & Navigation List */}
-        <div className="flex-1 overflow-y-auto px-4 pt-6 pb-4 scrollbar-none" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex-1 overflow-y-auto px-3 pt-6 pb-4 scrollbar-none" style={{ scrollbarWidth: 'none' }}>
           {/* Brand Logo Header */}
-          <div className="flex items-center gap-2.5 px-2 mb-6">
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" className="flex-shrink-0">
-              <circle cx="14" cy="14" r="13" stroke="url(#grad-side)" strokeWidth="2.5" fill="none" />
-              <circle cx="9" cy="14" r="3.8" fill="#2563EB" />
-              <circle cx="19" cy="14" r="3.8" fill="#E11D48" />
-              <circle cx="14" cy="9.8" fill="#06B6D4" />
-              <circle cx="14" cy="18.2" fill="#F59E0B" />
-              <defs>
-                <linearGradient id="grad-side" x1="0" y1="0" x2="28" y2="28">
-                  <stop stopColor="#2563EB" />
-                  <stop offset="0.5" stopColor="#E11D48" />
-                  <stop offset="1" stopColor="#F59E0B" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <span style={{ fontWeight: 700, fontSize: '19px', color: '#0f172a', letterSpacing: '-0.3px' }}>
-              cohort
-            </span>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: isHovered ? '0 6px' : '0',
+              justifyContent: isHovered ? 'flex-start' : 'center',
+              marginBottom: '24px',
+              transition: 'all 0.25s ease',
+            }}
+          >
+            <div style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="30" height="30" viewBox="0 0 28 28" fill="none">
+                <circle cx="14" cy="14" r="13" stroke="url(#grad-side)" strokeWidth="2.5" fill="none" />
+                <circle cx="9" cy="14" r="3.8" fill="#2563EB" />
+                <circle cx="19" cy="14" r="3.8" fill="#E11D48" />
+                <circle cx="14" cy="9.8" fill="#06B6D4" />
+                <circle cx="14" cy="18.2" fill="#F59E0B" />
+                <defs>
+                  <linearGradient id="grad-side" x1="0" y1="0" x2="28" y2="28">
+                    <stop stopColor="#2563EB" />
+                    <stop offset="0.5" stopColor="#E11D48" />
+                    <stop offset="1" stopColor="#F59E0B" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            {isHovered && (
+              <span
+                style={{
+                  fontWeight: 700,
+                  fontSize: '19px',
+                  color: '#0f172a',
+                  letterSpacing: '-0.3px',
+                  whiteSpace: 'nowrap',
+                  animation: 'fadeIn 0.2s ease',
+                }}
+              >
+                cohort
+              </span>
+            )}
           </div>
 
           {/* Navigation Items */}
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -156,21 +184,24 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                     setActiveTab(item.id);
                     setMobileOpen(false);
                   }}
+                  title={!isHovered ? item.label : undefined}
                   style={{
                     width: '100%',
+                    height: '44px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '10px 14px',
-                    borderRadius: '12px',
+                    justifyContent: isHovered ? 'space-between' : 'center',
+                    padding: isHovered ? '0 14px' : '0',
+                    borderRadius: isActive ? '14px' : '12px',
                     border: 'none',
                     cursor: 'pointer',
                     fontSize: '14.5px',
                     fontWeight: isActive ? 700 : 500,
                     backgroundColor: isActive ? '#2060E8' : 'transparent',
                     color: isActive ? '#ffffff' : '#4b5563',
-                    transition: 'all 0.15s ease',
-                    boxShadow: isActive ? '0 3px 10px rgba(32, 96, 232, 0.25)' : 'none',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: isActive ? '0 3px 12px rgba(32, 96, 232, 0.25)' : 'none',
+                    position: 'relative',
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(0,0,0,0.04)';
@@ -180,9 +211,9 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' }}>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '22px' }}>
                       <Icon
-                        size={19}
+                        size={20}
                         strokeWidth={isActive ? 2.3 : 1.8}
                         style={{ color: isActive ? '#ffffff' : '#556477', flexShrink: 0 }}
                       />
@@ -191,8 +222,8 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                         <span
                           style={{
                             position: 'absolute',
-                            top: '-5px',
-                            right: '-6px',
+                            top: '-6px',
+                            right: '-8px',
                             width: '15px',
                             height: '15px',
                             borderRadius: '50%',
@@ -210,12 +241,39 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                           {item.badge}
                         </span>
                       )}
+
+                      {/* Pill badge when collapsed (like HeadsUp 99+) */}
+                      {!isHovered && item.badge && item.badgeType === 'pill' && !isActive && (
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: '-8px',
+                            right: '-12px',
+                            padding: '1px 4px',
+                            borderRadius: '9999px',
+                            backgroundColor: '#EF4444',
+                            color: '#ffffff',
+                            fontSize: '8.5px',
+                            fontWeight: 700,
+                            lineHeight: 1,
+                            border: '1px solid #f7f8fa',
+                          }}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
                     </div>
-                    <span>{item.label}</span>
+
+                    {/* Label when expanded */}
+                    {isHovered && (
+                      <span style={{ whiteSpace: 'nowrap', animation: 'fadeIn 0.2s ease' }}>
+                        {item.label}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Right pill badge if badgeType === 'pill' (like HeadsUp 99+) */}
-                  {item.badge && item.badgeType === 'pill' && (
+                  {/* Right pill badge when expanded */}
+                  {isHovered && item.badge && item.badgeType === 'pill' && (
                     <span
                       style={{
                         fontSize: '10px',
@@ -236,57 +294,73 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           </nav>
         </div>
 
-        {/* Bottom Section: Theme Toggle & User Auth */}
-        <div style={{ padding: '14px 16px', borderTop: '1px solid rgba(0,0,0,0.06)', backgroundColor: 'transparent' }}>
+        {/* Bottom Section: Theme Toggle & User Account */}
+        <div
+          style={{
+            padding: isHovered ? '14px 14px' : '14px 0',
+            borderTop: '1px solid rgba(0,0,0,0.06)',
+            backgroundColor: 'transparent',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: isHovered ? 'stretch' : 'center',
+            transition: 'all 0.25s ease',
+          }}
+        >
           {/* Dark Mode Toggle */}
           <button
             onClick={toggleDarkMode}
+            title="Dark mode"
             style={{
-              width: '100%',
+              width: isHovered ? '100%' : '44px',
+              height: '44px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '8px 10px',
-              borderRadius: '10px',
+              justifyContent: isHovered ? 'space-between' : 'center',
+              padding: isHovered ? '0 12px' : '0',
+              borderRadius: '12px',
               border: 'none',
               cursor: 'pointer',
               fontSize: '13.5px',
               fontWeight: 500,
               color: '#556477',
               backgroundColor: 'transparent',
-              marginBottom: user ? '8px' : '0',
+              transition: 'all 0.2s ease',
             }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(0,0,0,0.04)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {darkMode ? <Sun size={17} style={{ color: '#f59e0b' }} /> : <Moon size={17} style={{ color: '#6b7280' }} />}
-              <span>{darkMode ? 'Light mode' : 'Dark mode'}</span>
+              {darkMode ? <Sun size={19} style={{ color: '#f59e0b' }} /> : <Moon size={19} style={{ color: '#556477' }} />}
+              {isHovered && <span style={{ whiteSpace: 'nowrap' }}>{darkMode ? 'Light mode' : 'Dark mode'}</span>}
             </div>
-            <div
-              style={{
-                width: '34px',
-                height: '18px',
-                borderRadius: '9999px',
-                padding: '2px',
-                backgroundColor: darkMode ? '#2060E8' : '#d1d5db',
-                transition: 'background-color 0.2s',
-                position: 'relative',
-              }}
-            >
+            {isHovered && (
               <div
                 style={{
-                  width: '14px',
-                  height: '14px',
+                  width: '34px',
+                  height: '18px',
                   borderRadius: '9999px',
-                  backgroundColor: '#ffffff',
-                  transform: darkMode ? 'translateX(16px)' : 'translateX(0)',
-                  transition: 'transform 0.2s',
+                  padding: '2px',
+                  backgroundColor: darkMode ? '#2060E8' : '#d1d5db',
+                  transition: 'background-color 0.2s',
+                  position: 'relative',
                 }}
-              />
-            </div>
+              >
+                <div
+                  style={{
+                    width: '14px',
+                    height: '14px',
+                    borderRadius: '9999px',
+                    backgroundColor: '#ffffff',
+                    transform: darkMode ? 'translateX(16px)' : 'translateX(0)',
+                    transition: 'transform 0.2s',
+                  }}
+                />
+              </div>
+            )}
           </button>
 
-          {/* User Account Info / Sign In */}
-          {user && (
+          {/* User Account Info when expanded */}
+          {user && isHovered && (
             <div
               style={{
                 display: 'flex',
@@ -296,7 +370,8 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                 padding: '8px 10px',
                 borderRadius: '12px',
                 border: '1px solid rgba(0,0,0,0.06)',
-                marginTop: '6px',
+                marginTop: '8px',
+                animation: 'fadeIn 0.2s ease',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
