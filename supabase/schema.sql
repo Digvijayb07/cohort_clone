@@ -10,9 +10,18 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     full_name TEXT,
     avatar_url TEXT,
     username TEXT UNIQUE,
+    department TEXT,
+    whatsapp TEXT,
+    linkedin TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Add new columns if table already exists (safe migration)
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS department TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS whatsapp TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS linkedin TEXT;
+
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Pencil, BarChart2, MessageSquare, Mail, LogOut, Camera, Loader2 } from 'lucide-react';
+import { Pencil, BarChart2, MessageSquare, Mail, LogOut, Camera, Loader2, X, Save } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 
@@ -78,6 +78,16 @@ export default function ProfilePage() {
   const [loadingActivity, setLoadingActivity] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
 
+  // Edit modal state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editUsername, setEditUsername] = useState('');
+  const [editDepartment, setEditDepartment] = useState('');
+  const [editWhatsapp, setEditWhatsapp] = useState('');
+  const [editLinkedin, setEditLinkedin] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+
   useEffect(() => {
     if (user) {
       fetchStats();
@@ -143,6 +153,45 @@ export default function ProfilePage() {
     setSigningOut(true);
     await signOut();
     setSigningOut(false);
+  };
+
+  const openEditModal = () => {
+    setEditName(profile?.full_name || user?.user_metadata?.full_name || '');
+    setEditUsername(profile?.username || user?.email?.split('@')[0] || '');
+    setEditDepartment((profile as any)?.department || '');
+    setEditWhatsapp((profile as any)?.whatsapp || '');
+    setEditLinkedin((profile as any)?.linkedin || '');
+    setSaveError('');
+    setEditOpen(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setSaving(true);
+    setSaveError('');
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editName.trim(),
+          username: editUsername.trim().replace(/^@/, ''),
+          department: editDepartment || null,
+          whatsapp: editWhatsapp.trim() || null,
+          linkedin: editLinkedin.trim() || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setEditOpen(false);
+      // Reload page to reflect profile changes from AuthContext
+      window.location.reload();
+    } catch (err: any) {
+      setSaveError(err.message || 'Failed to save. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
@@ -274,14 +323,15 @@ export default function ProfilePage() {
           {/* Action icons + Sign Out */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '4px' }}>
             {[
-              { icon: <Pencil size={15} />, title: 'Edit profile' },
-              { icon: <BarChart2 size={15} />, title: 'Analytics' },
-              { icon: <MessageSquare size={15} />, title: 'Messages' },
-              { icon: <Mail size={15} />, title: 'Email' },
-            ].map(({ icon, title }) => (
+              { icon: <Pencil size={15} />, title: 'Edit profile', onClick: openEditModal },
+              { icon: <BarChart2 size={15} />, title: 'Analytics', onClick: undefined },
+              { icon: <MessageSquare size={15} />, title: 'Messages', onClick: undefined },
+              { icon: <Mail size={15} />, title: 'Email', onClick: undefined },
+            ].map(({ icon, title, onClick }) => (
               <button
                 key={title}
                 title={title}
+                onClick={onClick}
                 style={{
                   width: '36px', height: '36px', borderRadius: '10px',
                   border: '1px solid rgba(0,0,0,0.09)',
@@ -491,6 +541,201 @@ export default function ProfilePage() {
           )
         )}
       </div>
+
+      {/* ─── Edit Profile Modal ──────────────────────── */}
+      {editOpen && (
+        <div
+          onClick={() => setEditOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            backgroundColor: 'rgba(0,0,0,0.45)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '16px',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '24px',
+              padding: '32px',
+              width: '100%',
+              maxWidth: '520px',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.18)',
+              position: 'relative',
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
+              <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: 0 }}>Edit Profile</h2>
+              <button
+                onClick={() => setEditOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '4px', borderRadius: '8px', display: 'flex' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Name */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748b', letterSpacing: '0.8px', marginBottom: '8px' }}>NAME</label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  padding: '12px 16px', borderRadius: '12px',
+                  border: '1.5px solid #e2e8f0', backgroundColor: '#f8fafc',
+                  fontSize: '14px', color: '#0f172a', outline: 'none',
+                  transition: 'border-color 0.15s',
+                }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = '#6366f1'; e.currentTarget.style.backgroundColor = '#ffffff'; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                placeholder="Your full name"
+              />
+            </div>
+
+            {/* Username */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748b', letterSpacing: '0.8px', marginBottom: '8px' }}>USERNAME</label>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '14px', fontWeight: 600 }}>@</span>
+                <input
+                  type="text"
+                  value={editUsername}
+                  onChange={(e) => setEditUsername(e.target.value.replace(/^@/, ''))}
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    padding: '12px 16px 12px 32px', borderRadius: '12px',
+                    border: '1.5px solid #e2e8f0', backgroundColor: '#f8fafc',
+                    fontSize: '14px', color: '#0f172a', outline: 'none',
+                    transition: 'border-color 0.15s',
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = '#6366f1'; e.currentTarget.style.backgroundColor = '#ffffff'; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                  placeholder="your_username"
+                />
+              </div>
+            </div>
+
+            {/* Department + WhatsApp row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748b', letterSpacing: '0.8px', marginBottom: '8px' }}>DEPARTMENT</label>
+                <select
+                  value={editDepartment}
+                  onChange={(e) => setEditDepartment(e.target.value)}
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    padding: '12px 16px', borderRadius: '12px',
+                    border: '1.5px solid #e2e8f0', backgroundColor: '#f8fafc',
+                    fontSize: '14px', color: editDepartment ? '#0f172a' : '#94a3b8',
+                    outline: 'none', cursor: 'pointer', appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 12px center',
+                    paddingRight: '36px',
+                  }}
+                >
+                  <option value="">Select Dept</option>
+                  {['COMP', 'IT', 'COMP-REG', 'CSE(AIML)', 'ENTC', 'MECH', 'CIVIL'].map((dept) => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748b', letterSpacing: '0.8px', marginBottom: '8px' }}>WHATSAPP</label>
+                <input
+                  type="tel"
+                  value={editWhatsapp}
+                  onChange={(e) => setEditWhatsapp(e.target.value)}
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    padding: '12px 16px', borderRadius: '12px',
+                    border: '1.5px solid #e2e8f0', backgroundColor: '#f8fafc',
+                    fontSize: '14px', color: '#0f172a', outline: 'none',
+                    transition: 'border-color 0.15s',
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = '#6366f1'; e.currentTarget.style.backgroundColor = '#ffffff'; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                  placeholder="91XXXXXXXXXX"
+                />
+              </div>
+            </div>
+
+            {/* LinkedIn */}
+            <div style={{ marginBottom: '28px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748b', letterSpacing: '0.8px', marginBottom: '8px' }}>LINKEDIN USERNAME</label>
+              <div style={{ display: 'flex', alignItems: 'center', borderRadius: '12px', border: '1.5px solid #e2e8f0', backgroundColor: '#f8fafc', overflow: 'hidden', transition: 'border-color 0.15s' }}
+                onFocusCapture={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = '#6366f1'; (e.currentTarget as HTMLDivElement).style.backgroundColor = '#ffffff'; }}
+                onBlurCapture={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = '#e2e8f0'; (e.currentTarget as HTMLDivElement).style.backgroundColor = '#f8fafc'; }}
+              >
+                <span style={{ padding: '12px 0 12px 16px', fontSize: '13px', color: '#94a3b8', whiteSpace: 'nowrap', userSelect: 'none' }}>linkedin.com/in/</span>
+                <input
+                  type="text"
+                  value={editLinkedin}
+                  onChange={(e) => setEditLinkedin(e.target.value)}
+                  style={{
+                    flex: 1, padding: '12px 16px 12px 4px',
+                    border: 'none', backgroundColor: 'transparent',
+                    fontSize: '14px', color: '#0f172a', outline: 'none',
+                  }}
+                  placeholder="your-linkedin-username"
+                />
+              </div>
+            </div>
+
+            {/* Error */}
+            {saveError && (
+              <p style={{ fontSize: '13px', color: '#e11d48', margin: '-16px 0 16px', padding: '10px 14px', backgroundColor: '#fff0f3', borderRadius: '8px', border: '1px solid #fecdd3' }}>
+                {saveError}
+              </p>
+            )}
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setEditOpen(false)}
+                style={{
+                  flex: 1, padding: '13px',
+                  borderRadius: '12px',
+                  border: '1.5px solid #e2e8f0',
+                  backgroundColor: '#ffffff',
+                  fontSize: '14px', fontWeight: 700, color: '#475569',
+                  cursor: 'pointer', transition: 'background-color 0.15s',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f8fafc'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#ffffff'; }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveProfile}
+                disabled={saving}
+                style={{
+                  flex: 2, padding: '13px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: saving ? '#94a3b8' : 'linear-gradient(135deg, #6366f1, #0891b2)',
+                  fontSize: '14px', fontWeight: 700, color: '#ffffff',
+                  cursor: saving ? 'wait' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  transition: 'opacity 0.15s',
+                  boxShadow: saving ? 'none' : '0 4px 14px rgba(99,102,241,0.35)',
+                }}
+              >
+                {saving
+                  ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                  : <Save size={16} />
+                }
+                {saving ? 'Saving…' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
