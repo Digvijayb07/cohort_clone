@@ -1,13 +1,22 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabaseClient';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const [agreed, setAgreed] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const { user, signInWithGoogle } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
 
   const handleGoogleSignIn = async () => {
     if (!agreed) {
@@ -19,28 +28,9 @@ export default function LoginPage() {
     setErrorMsg(null);
 
     try {
-      const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/` : undefined;
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data?.url) {
-        window.location.href = data.url;
-      }
+      await signInWithGoogle();
     } catch (err: any) {
-      console.error('Supabase Google sign-in error:', err);
+      console.error('Sign in error:', err);
       setErrorMsg(err.message || 'Failed to initialize Google authentication');
       setLoading(false);
     }
